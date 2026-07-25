@@ -10,10 +10,17 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
+function initialState() {
+  if (!('Notification' in window)) return 'unsupported';
+  if (Notification.permission === 'granted') return 'granted';
+  if (Notification.permission === 'denied') return 'denied';
+  return 'idle';
+}
+
 // Ativa notificações push reais (funcionam com o app fechado).
 // Requer HTTPS + o app instalado na tela inicial no iOS (iOS 16.4+).
 export function usePushSubscription(userId) {
-  const [state, setState] = useState('idle'); // idle | asking | granted | denied | unsupported | error
+  const [state, setState] = useState(initialState); // idle | asking | granted | denied | unsupported | error
 
   const enable = useCallback(async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
