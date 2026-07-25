@@ -1,0 +1,92 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+import { ChevronLeftIcon, PlusIcon } from '../components/Icons';
+
+export default function TripDetail() {
+  const { tripId } = useParams();
+  const [trip, setTrip] = useState(null);
+  const [images, setImages] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  async function loadAll() {
+    const [{ data: t }, { data: imgs }] = await Promise.all([
+      supabase.from('trips').select('*').eq('id', tripId).single(),
+      supabase.from('trip_images').select('*').eq('trip_id', tripId).order('created_at', { ascending: false })
+    ]);
+    setTrip(t);
+    setImages(imgs || []);
+  }
+
+  useEffect(() => { loadAll(); }, [tripId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleUpload(e) {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of files) {
+        const path = `${tripId}/${Date.now()}-${file.name}`;
+        const { error: upErr } = await supabase.storage.from('trips').upload(path, file);
+        if (upErr) continue;
+        const { data: pub } = supabase.storage.from('trips').getPublicUrl(path);
+        await supabase.from('trip_images').insert({ trip_id: tripId, image_url: pub.publicUrl });
+      }
+      await loadAll();
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  if (!trip) {
+    return <div className="screen" style={{ padding: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
+  }
+
+  return (
+    <div className="screen">
+      <div
+        style={{
+          height: 220,
+          backgroundImage: trip.cover_image_url ? `url(${trip.cover_image_url})` : 'linear-gradient(135deg,#2A2A5C,#1F1F45)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          position: 'relative'
+        }}
+      >
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(20,20,43,0.35) 0%, rgba(20,20,43,0.95) 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 20 }}>
+          <Link to="/viagens" style={{ position: 'absolute', top: 18, left: 18, background: 'rgba(20,20,43,0.6)', borderRadius: 999, padding: 8, display: 'flex' }}>
+            <ChevronLeftIcon width={18} height={18} />
+          </Link>
+          <p className="eyebrow" style={{ color: 'var(--gold)' }}>{formatDate(trip.trip_date)}</p>
+          <h1 style={{ fontSize: 26 }}>{trip.title}</h1>
+        </div>
+      </div>
+
+      <div style={{ padding: 20 }}>
+        {trip.description && <p style={{ color: 'var(--muted)', lineHeight: 1.6, fontSize: 14.5 }}>{trip.description}</p>}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 12px' }}>
+          <p className="eyebrow">galeria</p>
+          <label className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', fontSize: 12 }}>
+            <PlusIcon width={14} height={14} /> {uploading ? 'Enviando…' : 'Adicionar fotos'}
+            <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleUpload} style={{ display: 'none' }} disabled={uploading} />
+          </label>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {images.map((img) => (
+            <img key={img.id} src={img.image_url} alt="" style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: 14 }} />
+          ))}
+        </div>
+        {images.length === 0 && <p style={{ color: 'var(--muted)', fontSize: 13.5 }}>Nenhuma foto ainda. Adicione as primeiras lembranças dessa viagem.</p>}
+      </div>
+    </div>
+  );
+}
+
+function formatDate(d) {
+  if (!d) return 'sem data';
+  return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+}
