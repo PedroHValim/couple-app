@@ -1,0 +1,6 @@
+2. Processo para deletar um usuário/casal daqui pra frente:
+
+
+select id, email from auth.users;              -- 1. pega o id
+select public.admin_delete_user('COLE_O_ID');   -- 2. apaga tudo (storage + auth + cascata em profiles/trips/messages/etc.)
+Para apagar o casal inteiro, só rode o admin_delete_user duas vezes, uma pra cada id. Não precisa mais mexer no dashboard (Authentication → Users) nem se preocupar com storage — a função já cuida de tudo numa chamada só.

@@ -14,7 +14,7 @@ create table if not exists public.profiles (
   name text,
   avatar_url text,
   invite_code text unique,
-  partner_id uuid references public.profiles(id),
+  partner_id uuid references public.profiles(id) on delete set null,
   created_at timestamptz default now()
 );
 
@@ -209,13 +209,32 @@ create policy "gerenciar minha propria subscription"
   with check (user_id = auth.uid());
 
 -- ------------------------------------------------------------
--- 6. REALTIME
+-- 6. ADMIN: apagar usuario/casal (uso manual pelo SQL Editor)
+-- ------------------------------------------------------------
+-- storage.objects pertence ao Supabase (supabase_storage_admin), entao nao da
+-- pra colocar "on delete cascade" na FK dele. Essa funcao contorna isso: ela
+-- roda como dona do schema public, entao tem permissao de DELETE (mas nao de
+-- ALTER) nas tabelas internas, e apaga storage + auth.users numa chamada so.
+-- Uso: select public.admin_delete_user('uuid-do-usuario');
+create or replace function public.admin_delete_user(target_id uuid)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  delete from storage.objects where owner = target_id;
+  delete from auth.users where id = target_id;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- 7. REALTIME
 -- ------------------------------------------------------------
 alter publication supabase_realtime add table public.locations;
 alter publication supabase_realtime add table public.messages;
 
 -- ------------------------------------------------------------
--- 7. STORAGE BUCKETS (rode também pelo Dashboard > Storage se preferir)
+-- 8. STORAGE BUCKETS (rode também pelo Dashboard > Storage se preferir)
 -- ------------------------------------------------------------
 insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true)
   on conflict (id) do nothing;
