@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
@@ -22,7 +22,7 @@ function initialState() {
 export function usePushSubscription(userId) {
   const [state, setState] = useState(initialState); // idle | asking | granted | denied | unsupported | error
 
-  const enable = useCallback(async () => {
+  const subscribeAndSave = useCallback(async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       setState('unsupported');
       return;
@@ -30,13 +30,6 @@ export function usePushSubscription(userId) {
     if (!VAPID_PUBLIC_KEY) {
       console.warn('VITE_VAPID_PUBLIC_KEY não configurada — veja README.md.');
       setState('error');
-      return;
-    }
-
-    setState('asking');
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      setState('denied');
       return;
     }
 
@@ -62,6 +55,30 @@ export function usePushSubscription(userId) {
       setState('error');
     }
   }, [userId]);
+
+  // Se a permissão já foi concedida antes (sessão anterior), garante que a
+  // subscription exista e esteja salva no banco, sem precisar mostrar o banner.
+  useEffect(() => {
+    if (userId && Notification?.permission === 'granted') {
+      subscribeAndSave();
+    }
+  }, [userId, subscribeAndSave]);
+
+  const enable = useCallback(async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setState('unsupported');
+      return;
+    }
+
+    setState('asking');
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      setState('denied');
+      return;
+    }
+
+    await subscribeAndSave();
+  }, [subscribeAndSave]);
 
   return { state, enable };
 }
