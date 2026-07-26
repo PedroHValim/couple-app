@@ -1,8 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
 import { useGameSession } from '../../lib/useGameSession';
-import { ChevronLeftIcon } from '../../components/Icons';
+import GameHeader from '../../components/GameHeader';
 
 const LINES = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -50,16 +49,11 @@ export default function TicTacToe() {
   else statusText = turn === mySymbol ? 'Sua vez' : 'Vez do seu par';
 
   return (
-    <div className="screen" style={{ padding: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <Link to="/jogos" style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 999, padding: 8, display: 'flex' }}>
-          <ChevronLeftIcon width={18} height={18} />
-        </Link>
-        <div>
-          <p className="eyebrow">jogos</p>
-          <h1 style={{ fontSize: 22, marginTop: 2 }}>Jogo da velha</h1>
-        </div>
-      </div>
+    <div className="screen" style={{ padding: 20, paddingTop: 'calc(20px + env(safe-area-inset-top))' }}>
+      <GameHeader
+        title="Jogo da velha"
+        description="Toquem alternadamente numa casa vazia. Quem alinhar 3 símbolos primeiro (na horizontal, vertical ou diagonal) vence. Se o tabuleiro encher sem ninguém alinhar, é empate."
+      />
 
       <p style={{ textAlign: 'center', color: winner ? 'var(--gold)' : 'var(--muted)', fontWeight: 700, marginBottom: 18 }}>
         {statusText} — você é {mySymbol}

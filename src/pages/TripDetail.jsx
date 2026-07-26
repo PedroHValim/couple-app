@@ -71,7 +71,7 @@ export default function TripDetail() {
         }}
       >
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(20,20,43,0.35) 0%, rgba(20,20,43,0.95) 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 20 }}>
-          <Link to="/viagens" style={{ position: 'absolute', top: 18, left: 18, background: 'rgba(20,20,43,0.6)', borderRadius: 999, padding: 8, display: 'flex' }}>
+          <Link to="/viagens" style={{ position: 'absolute', top: 'calc(18px + env(safe-area-inset-top))', left: 18, background: 'rgba(20,20,43,0.6)', borderRadius: 999, padding: 8, display: 'flex' }}>
             <ChevronLeftIcon width={18} height={18} />
           </Link>
           <p className="eyebrow" style={{ color: 'var(--gold)' }}>{formatDate(trip.trip_date)}</p>
@@ -114,7 +114,7 @@ export default function TripDetail() {
         >
           <button
             onClick={() => setOpenImage(null)}
-            style={{ position: 'absolute', top: 18, right: 18, background: 'rgba(255,255,255,0.12)', borderRadius: 999, padding: 8, display: 'flex' }}
+            style={{ position: 'absolute', top: 'calc(18px + env(safe-area-inset-top))', right: 18, background: 'rgba(255,255,255,0.12)', borderRadius: 999, padding: 8, display: 'flex' }}
           >
             <CloseIcon width={20} height={20} style={{ color: 'var(--cream)' }} />
           </button>

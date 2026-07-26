@@ -1,8 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext';
 import { useGameSession } from '../../lib/useGameSession';
-import { ChevronLeftIcon } from '../../components/Icons';
+import GameHeader from '../../components/GameHeader';
 
 const OPTIONS = [
   { key: 'pedra', label: 'Pedra', emoji: '🪨' },
@@ -50,16 +49,11 @@ export default function RockPaperScissors() {
   else statusText = 'Escolha sua jogada';
 
   return (
-    <div className="screen" style={{ padding: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <Link to="/jogos" style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 999, padding: 8, display: 'flex' }}>
-          <ChevronLeftIcon width={18} height={18} />
-        </Link>
-        <div>
-          <p className="eyebrow">jogos</p>
-          <h1 style={{ fontSize: 22, marginTop: 2 }}>Pedra, papel e tesoura</h1>
-        </div>
-      </div>
+    <div className="screen" style={{ padding: 20, paddingTop: 'calc(20px + env(safe-area-inset-top))' }}>
+      <GameHeader
+        title="Pedra, papel e tesoura"
+        description="Os dois escolhem ao mesmo tempo, sem ver a jogada um do outro. Pedra ganha de tesoura, tesoura ganha de papel, papel ganha de pedra. Escolha igual é empate."
+      />
 
       <p style={{ textAlign: 'center', color: result ? 'var(--gold)' : 'var(--muted)', fontWeight: 700, marginBottom: 22 }}>
         {statusText}

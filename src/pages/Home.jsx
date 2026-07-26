@@ -134,18 +134,28 @@ export default function Home() {
       {showHistory && (
         <div
           onClick={() => setShowHistory(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(10,10,25,0.75)', display: 'flex', alignItems: 'flex-end' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(6,6,16,0.88)', display: 'flex', alignItems: 'flex-end' }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="card"
-            style={{ width: '100%', maxHeight: '70vh', overflowY: 'auto', borderRadius: '20px 20px 0 0', margin: 0 }}
+            style={{
+              width: '100%',
+              maxHeight: '70vh',
+              overflowY: 'auto',
+              borderRadius: '20px 20px 0 0',
+              padding: 20,
+              paddingBottom: 'calc(20px + env(safe-area-inset-bottom))',
+              background: 'var(--night-2)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderBottom: 'none',
+              boxShadow: '0 -12px 40px rgba(0,0,0,0.5)'
+            }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <h3 style={{ fontSize: 17 }}>Mensagens de {partner?.name}</h3>
               <button
                 onClick={() => setShowHistory(false)}
-                style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 999, padding: 6, display: 'flex' }}
+                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 999, padding: 6, display: 'flex' }}
               >
                 <CloseIcon width={16} height={16} />
               </button>
