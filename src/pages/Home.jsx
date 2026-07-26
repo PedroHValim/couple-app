@@ -98,7 +98,7 @@ export default function Home() {
         />
       )}
 
-      <div style={{ height: 340, margin: '0 20px 16px', borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ height: 340, margin: '0 20px 16px', borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', position: 'relative', zIndex: 0 }}>
         <MapContainer center={points[0] || FALLBACK_CENTER} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={false}>
           <TileLayer
             attribution='&copy; OpenStreetMap contributors'
