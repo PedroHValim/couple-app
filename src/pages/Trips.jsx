@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
 import { compressImage } from '../lib/compressImage';
@@ -64,16 +64,16 @@ export default function Trips() {
 }
 
 function TripCard({ trip, onDelete }) {
-  const longPress = useLongPress(onDelete);
+  const navigate = useNavigate();
+  const { handlers, wasLongPress } = useLongPress(onDelete);
   return (
-    <Link
-      to={`/viagens/${trip.id}`}
-      {...longPress}
+    <div
+      {...handlers}
+      onClick={() => { if (!wasLongPress()) navigate(`/viagens/${trip.id}`); }}
       className="card"
       style={{
-        ...longPress.style,
-        display: 'block',
-        textDecoration: 'none',
+        ...handlers.style,
+        cursor: 'pointer',
         padding: 0,
         overflow: 'hidden',
         height: 160,
@@ -87,7 +87,7 @@ function TripCard({ trip, onDelete }) {
         <p className="eyebrow" style={{ color: 'var(--gold)' }}>{formatDate(trip.trip_date)}</p>
         <h3 style={{ fontSize: 19, color: 'var(--cream)' }}>{trip.title}</h3>
       </div>
-    </Link>
+    </div>
   );
 }
 

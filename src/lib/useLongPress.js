@@ -1,8 +1,9 @@
 import { useCallback, useRef } from 'react';
 
 // Dispara onLongPress ao segurar por `delay`ms (dedo ou mouse).
-// Cancela se o dedo se mover (rolando a lista) ou soltar antes da hora,
-// e bloqueia o clique/navegação normal que teria disparado no soltar.
+// Cancela se o dedo se mover (rolando a lista) ou soltar antes da hora.
+// wasLongPress() diz pro chamador se deve ignorar o clique normal que
+// seguiria o toque (ex: não navegar se acabou de apagar).
 export function useLongPress(onLongPress, { delay = 550, moveThreshold = 10 } = {}) {
   const timerRef = useRef(null);
   const firedRef = useRef(false);
@@ -29,20 +30,22 @@ export function useLongPress(onLongPress, { delay = 550, moveThreshold = 10 } = 
     if (Math.hypot(dx, dy) > moveThreshold) clear();
   }, [clear, moveThreshold]);
 
+  const wasLongPress = useCallback(() => {
+    const fired = firedRef.current;
+    firedRef.current = false;
+    return fired;
+  }, []);
+
   return {
-    onPointerDown: start,
-    onPointerMove: move,
-    onPointerUp: clear,
-    onPointerLeave: clear,
-    onPointerCancel: clear,
-    onContextMenu: (e) => e.preventDefault(),
-    onClickCapture: (e) => {
-      if (firedRef.current) {
-        e.preventDefault();
-        e.stopPropagation();
-        firedRef.current = false;
-      }
+    handlers: {
+      onPointerDown: start,
+      onPointerMove: move,
+      onPointerUp: clear,
+      onPointerLeave: clear,
+      onPointerCancel: clear,
+      onContextMenu: (e) => e.preventDefault(),
+      style: { WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', touchAction: 'manipulation' }
     },
-    style: { WebkitTouchCallout: 'none', userSelect: 'none', touchAction: 'manipulation' }
+    wasLongPress
   };
 }

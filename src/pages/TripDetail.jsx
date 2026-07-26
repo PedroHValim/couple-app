@@ -101,13 +101,21 @@ export default function TripDetail() {
 }
 
 function GalleryPhoto({ img, onDelete }) {
-  const longPress = useLongPress(onDelete);
+  const { handlers } = useLongPress(onDelete);
   return (
-    <img
-      src={img.image_url}
-      alt=""
-      {...longPress}
-      style={{ ...longPress.style, width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: 14 }}
+    <div
+      {...handlers}
+      role="img"
+      aria-label="Foto da viagem"
+      style={{
+        ...handlers.style,
+        width: '100%',
+        aspectRatio: '1/1',
+        borderRadius: 14,
+        backgroundImage: `url(${img.image_url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
     />
   );
 }
