@@ -213,6 +213,9 @@ create table if not exists public.movies (
   genre text not null,
   owner_rating smallint not null check (owner_rating between 1 and 10),
   partner_rating smallint check (partner_rating between 1 and 10),
+  tmdb_id integer,
+  poster_path text,
+  overview text,
   created_at timestamptz default now()
 );
 
