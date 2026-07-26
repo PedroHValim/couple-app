@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
 import { useLocationSync } from '../lib/useLocationSync';
 import { useCoupleLocations } from '../lib/useCoupleLocations';
@@ -7,7 +8,11 @@ import { useIncomingMessages } from '../lib/useIncomingMessages';
 import { usePushSubscription } from '../lib/usePushSubscription';
 import { avatarDivIcon } from '../components/AvatarMarker';
 import MessageButtons from '../components/MessageButtons';
+import { QUICK_MESSAGES } from '../lib/messages';
+import { BellIcon, CloseIcon, ICONS_BY_KEY } from '../components/Icons';
 import '../components/mapMarkers.css';
+
+const LAST_SEEN_KEY = 'nossa-orbita-last-seen-msg';
 
 const FALLBACK_CENTER = [-23.5505, -46.6333]; // São Paulo, usado só se ninguém tiver localização ainda
 
@@ -32,6 +37,9 @@ export default function Home() {
   const incoming = useIncomingMessages(myId);
   const { state: pushState, enable: enablePush } = usePushSubscription(myId);
   const [toast, setToast] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState(null);
+  const [lastSeenId, setLastSeenId] = useState(() => localStorage.getItem(LAST_SEEN_KEY));
 
   useEffect(() => {
     if (incoming) {
@@ -41,15 +49,43 @@ export default function Home() {
     }
   }, [incoming]);
 
+  const hasUnread = !!incoming && incoming.id !== lastSeenId;
+
+  async function openHistory() {
+    setShowHistory(true);
+    if (incoming) {
+      localStorage.setItem(LAST_SEEN_KEY, incoming.id);
+      setLastSeenId(incoming.id);
+    }
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('receiver_id', myId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    setHistory(data || []);
+  }
+
   const mePoint = locations[myId] ? [locations[myId].lat, locations[myId].lng] : null;
   const partnerPoint = locations[partner?.id] ? [locations[partner.id].lat, locations[partner.id].lng] : null;
   const points = useMemo(() => [mePoint, partnerPoint].filter(Boolean), [mePoint, partnerPoint]);
 
   return (
     <div className="screen" style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '20px 20px 12px' }}>
-        <p className="eyebrow">nossa órbita</p>
-        <h1 style={{ fontSize: 24, marginTop: 4 }}>Onde vocês estão</h1>
+      <div style={{ padding: '20px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <p className="eyebrow">nossa órbita</p>
+          <h1 style={{ fontSize: 24, marginTop: 4 }}>Onde vocês estão</h1>
+        </div>
+        <button
+          onClick={openHistory}
+          style={{ position: 'relative', background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 999, padding: 10, display: 'flex' }}
+        >
+          <BellIcon width={20} height={20} />
+          {hasUnread && (
+            <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: 'var(--dawn)' }} />
+          )}
+        </button>
       </div>
 
       {locStatus === 'denied' && (
@@ -92,6 +128,44 @@ export default function Home() {
           fontSize: 14, textAlign: 'center'
         }}>
           {partner?.name} disse: {toast}
+        </div>
+      )}
+
+      {showHistory && (
+        <div
+          onClick={() => setShowHistory(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(10,10,25,0.75)', display: 'flex', alignItems: 'flex-end' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="card"
+            style={{ width: '100%', maxHeight: '70vh', overflowY: 'auto', borderRadius: '20px 20px 0 0', margin: 0 }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h3 style={{ fontSize: 17 }}>Mensagens de {partner?.name}</h3>
+              <button
+                onClick={() => setShowHistory(false)}
+                style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 999, padding: 6, display: 'flex' }}
+              >
+                <CloseIcon width={16} height={16} />
+              </button>
+            </div>
+
+            {history === null && <p style={{ color: 'var(--muted)' }}>Carregando…</p>}
+            {history?.length === 0 && <p style={{ color: 'var(--muted)', fontSize: 13.5 }}>Nenhuma mensagem recebida ainda.</p>}
+            {history?.map((m) => {
+              const Icon = ICONS_BY_KEY[QUICK_MESSAGES[m.type]?.icon];
+              return (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  {Icon && <Icon width={20} height={20} style={{ color: 'var(--gold)', flexShrink: 0 }} />}
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 14 }}>{m.body}</p>
+                    <p className="eyebrow" style={{ marginTop: 2 }}>{formatUpdated(m.created_at)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

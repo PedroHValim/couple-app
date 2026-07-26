@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { GameIcon } from '../components/Icons';
 
 const GAMES = [
-  { key: 'velha', title: 'Jogo da velha', description: 'O clássico X e O, em tempo real, um contra o outro.' }
+  { key: 'velha', title: 'Jogo da velha', description: 'O clássico X e O, em tempo real, um contra o outro.' },
+  { key: 'ppt', title: 'Pedra, papel e tesoura', description: 'Escolham ao mesmo tempo e vejam quem leva a rodada.' },
+  { key: 'lig4', title: 'Lig-4', description: 'Alinhe 4 peças antes do seu par, num tabuleiro 7x6.' }
 ];
 
 export default function Games() {

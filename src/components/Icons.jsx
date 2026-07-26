@@ -44,6 +44,9 @@ export const FilmIcon = (p) => (
 export const GameIcon = (p) => (
   <svg {...base} {...p}><rect x="2.5" y="8" width="19" height="9" rx="4.5"/><path d="M7 10.5v4M5 12.5h4"/><circle cx="16" cy="11" r="1"/><circle cx="18.5" cy="13.5" r="1"/></svg>
 );
+export const BellIcon = (p) => (
+  <svg {...base} {...p}><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 2 6.5H4c.5-1 2-2.5 2-6.5Z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>
+);
 
 export const ICONS_BY_KEY = {
   sun: SunIcon,
