@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { compressImage } from '../lib/compressImage';
+import { useLongPress } from '../lib/useLongPress';
 import { ChevronLeftIcon, PlusIcon } from '../components/Icons';
 
 export default function TripDetail() {
@@ -27,8 +29,9 @@ export default function TripDetail() {
     setUploading(true);
     try {
       for (const file of files) {
-        const path = `${tripId}/${Date.now()}-${file.name}`;
-        const { error: upErr } = await supabase.storage.from('trips').upload(path, file);
+        const compressed = await compressImage(file);
+        const path = `${tripId}/${Date.now()}-${compressed.name}`;
+        const { error: upErr } = await supabase.storage.from('trips').upload(path, compressed);
         if (upErr) continue;
         const { data: pub } = supabase.storage.from('trips').getPublicUrl(path);
         await supabase.from('trip_images').insert({ trip_id: tripId, image_url: pub.publicUrl });
@@ -38,6 +41,17 @@ export default function TripDetail() {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  }
+
+  async function deleteImage(img) {
+    if (!window.confirm('Apagar esta foto?')) return;
+    const marker = '/storage/v1/object/public/trips/';
+    const idx = img.image_url.indexOf(marker);
+    if (idx !== -1) {
+      await supabase.storage.from('trips').remove([img.image_url.slice(idx + marker.length)]);
+    }
+    await supabase.from('trip_images').delete().eq('id', img.id);
+    loadAll();
   }
 
   if (!trip) {
@@ -77,12 +91,24 @@ export default function TripDetail() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {images.map((img) => (
-            <img key={img.id} src={img.image_url} alt="" style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: 14 }} />
+            <GalleryPhoto key={img.id} img={img} onDelete={() => deleteImage(img)} />
           ))}
         </div>
         {images.length === 0 && <p style={{ color: 'var(--muted)', fontSize: 13.5 }}>Nenhuma foto ainda. Adicione as primeiras lembranças dessa viagem.</p>}
       </div>
     </div>
+  );
+}
+
+function GalleryPhoto({ img, onDelete }) {
+  const longPress = useLongPress(onDelete);
+  return (
+    <img
+      src={img.image_url}
+      alt=""
+      {...longPress}
+      style={{ ...longPress.style, width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: 14 }}
+    />
   );
 }
 

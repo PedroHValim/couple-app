@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
+import { compressImage } from '../lib/compressImage';
+import { useLongPress } from '../lib/useLongPress';
 import { PlusIcon, CameraIcon } from '../components/Icons';
 
 export default function Trips() {
@@ -15,6 +17,16 @@ export default function Trips() {
   }
 
   useEffect(() => { loadTrips(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function deleteTrip(trip) {
+    if (!window.confirm(`Apagar a viagem "${trip.title}"? Isso remove todas as fotos dela também.`)) return;
+    const { data: files } = await supabase.storage.from('trips').list(trip.id);
+    if (files?.length) {
+      await supabase.storage.from('trips').remove(files.map((f) => `${trip.id}/${f.name}`));
+    }
+    await supabase.from('trips').delete().eq('id', trip.id);
+    loadTrips();
+  }
 
   return (
     <div className="screen">
@@ -44,20 +56,24 @@ export default function Trips() {
           </div>
         )}
         {trips?.map((trip) => (
-          <Link key={trip.id} to={`/viagens/${trip.id}`} style={{ textDecoration: 'none' }}>
-            <TripCard trip={trip} />
-          </Link>
+          <TripCard key={trip.id} trip={trip} onDelete={() => deleteTrip(trip)} />
         ))}
       </div>
     </div>
   );
 }
 
-function TripCard({ trip }) {
+function TripCard({ trip, onDelete }) {
+  const longPress = useLongPress(onDelete);
   return (
-    <div
+    <Link
+      to={`/viagens/${trip.id}`}
+      {...longPress}
       className="card"
       style={{
+        ...longPress.style,
+        display: 'block',
+        textDecoration: 'none',
         padding: 0,
         overflow: 'hidden',
         height: 160,
@@ -71,7 +87,7 @@ function TripCard({ trip }) {
         <p className="eyebrow" style={{ color: 'var(--gold)' }}>{formatDate(trip.trip_date)}</p>
         <h3 style={{ fontSize: 19, color: 'var(--cream)' }}>{trip.title}</h3>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -96,8 +112,9 @@ function NewTripForm({ onClose, onCreated }) {
       if (insertErr) throw insertErr;
 
       if (coverFile) {
+        const compressed = await compressImage(coverFile);
         const path = `${trip.id}/cover-${Date.now()}.jpg`;
-        const { error: upErr } = await supabase.storage.from('trips').upload(path, coverFile, { upsert: true });
+        const { error: upErr } = await supabase.storage.from('trips').upload(path, compressed, { upsert: true });
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from('trips').getPublicUrl(path);
         await supabase.from('trips').update({ cover_image_url: pub.publicUrl }).eq('id', trip.id);

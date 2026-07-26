@@ -171,6 +171,10 @@ create policy "editar viagem do casal"
   on public.trips for update
   using (owner_id = auth.uid() or partner_id = auth.uid());
 
+create policy "apagar viagem do casal"
+  on public.trips for delete
+  using (owner_id = auth.uid() or partner_id = auth.uid());
+
 create table if not exists public.trip_images (
   id uuid primary key default gen_random_uuid(),
   trip_id uuid references public.trips(id) on delete cascade,
@@ -189,6 +193,12 @@ create policy "ver fotos das viagens do casal"
 create policy "adicionar foto a viagem do casal"
   on public.trip_images for insert
   with check (
+    trip_id in (select id from public.trips where owner_id = auth.uid() or partner_id = auth.uid())
+  );
+
+create policy "apagar foto de viagem do casal"
+  on public.trip_images for delete
+  using (
     trip_id in (select id from public.trips where owner_id = auth.uid() or partner_id = auth.uid())
   );
 
@@ -256,3 +266,7 @@ create policy "leitura publica trips"
 create policy "upload trips autenticado"
   on storage.objects for insert
   with check (bucket_id = 'trips' and auth.role() = 'authenticated');
+
+create policy "apagar trips autenticado"
+  on storage.objects for delete
+  using (bucket_id = 'trips' and auth.role() = 'authenticated');

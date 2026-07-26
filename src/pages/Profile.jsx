@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
+import { compressImage } from '../lib/compressImage';
 import { CameraIcon, LogoutIcon } from '../components/Icons';
 
 export default function Profile() {
@@ -22,8 +23,9 @@ export default function Profile() {
     if (!file) return;
     setUploading(true);
     try {
+      const compressed = await compressImage(file, { maxWidth: 800, quality: 0.8 });
       const path = `${profile.id}/avatar-${Date.now()}.jpg`;
-      const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from('avatars').upload(path, compressed, { upsert: true });
       if (!error) {
         const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
         await supabase.from('profiles').update({ avatar_url: pub.publicUrl }).eq('id', profile.id);
