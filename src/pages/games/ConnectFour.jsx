@@ -1,7 +1,9 @@
 import React from 'react';
 import { useAuth } from '../../lib/AuthContext';
 import { useGameSession } from '../../lib/useGameSession';
+import { useGamePresence } from '../../lib/useGamePresence';
 import GameHeader from '../../components/GameHeader';
+import InviteToPlay from '../../components/InviteToPlay';
 
 const COLS = 7;
 const ROWS = 6;
@@ -46,9 +48,11 @@ function dropInColumn(board, col, symbol) {
 const INITIAL_STATE = { board: Array(COLS * ROWS).fill(null), turn: 'X' };
 
 export default function ConnectFour() {
-  const { session: authSession } = useAuth();
+  const { session: authSession, partner } = useAuth();
   const myId = authSession?.user?.id;
   const { session, updateState } = useGameSession('lig4', INITIAL_STATE);
+  const onlineIds = useGamePresence('lig4', myId);
+  const partnerOnline = !!partner?.id && onlineIds.includes(partner.id);
 
   if (!session) {
     return <div className="screen" style={{ padding: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
@@ -79,6 +83,8 @@ export default function ConnectFour() {
       <GameHeader
         title="Lig-4"
         description="Toquem numa coluna pra soltar sua peça (🟡 ou 🟣) — ela cai até o espaço vazio mais baixo. Quem alinhar 4 peças primeiro (horizontal, vertical ou diagonal) vence."
+        partnerName={partner?.name}
+        partnerOnline={partnerOnline}
       />
 
       <p style={{ textAlign: 'center', color: winner ? 'var(--gold)' : 'var(--muted)', fontWeight: 700, marginBottom: 16 }}>
@@ -103,6 +109,7 @@ export default function ConnectFour() {
       </div>
 
       <button className="btn btn-outline" style={{ width: '100%' }} onClick={handleRestart}>Reiniciar</button>
+      {!partnerOnline && <InviteToPlay gameKey="lig4" gameTitle="Lig-4" />}
     </div>
   );
 }

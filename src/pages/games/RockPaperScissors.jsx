@@ -1,7 +1,9 @@
 import React from 'react';
 import { useAuth } from '../../lib/AuthContext';
 import { useGameSession } from '../../lib/useGameSession';
+import { useGamePresence } from '../../lib/useGamePresence';
 import GameHeader from '../../components/GameHeader';
+import InviteToPlay from '../../components/InviteToPlay';
 
 const OPTIONS = [
   { key: 'pedra', label: 'Pedra', emoji: '🪨' },
@@ -19,9 +21,11 @@ function computeResult(ownerChoice, partnerChoice) {
 const INITIAL_STATE = { ownerChoice: null, partnerChoice: null };
 
 export default function RockPaperScissors() {
-  const { session: authSession } = useAuth();
+  const { session: authSession, partner } = useAuth();
   const myId = authSession?.user?.id;
   const { session, updateState } = useGameSession('ppt', INITIAL_STATE);
+  const onlineIds = useGamePresence('ppt', myId);
+  const partnerOnline = !!partner?.id && onlineIds.includes(partner.id);
 
   if (!session) {
     return <div className="screen" style={{ padding: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
@@ -53,6 +57,8 @@ export default function RockPaperScissors() {
       <GameHeader
         title="Pedra, papel e tesoura"
         description="Os dois escolhem ao mesmo tempo, sem ver a jogada um do outro. Pedra ganha de tesoura, tesoura ganha de papel, papel ganha de pedra. Escolha igual é empate."
+        partnerName={partner?.name}
+        partnerOnline={partnerOnline}
       />
 
       <p style={{ textAlign: 'center', color: result ? 'var(--gold)' : 'var(--muted)', fontWeight: 700, marginBottom: 22 }}>
@@ -84,6 +90,7 @@ export default function RockPaperScissors() {
           {result ? 'Jogar de novo' : 'Reiniciar'}
         </button>
       )}
+      {!partnerOnline && <InviteToPlay gameKey="ppt" gameTitle="Pedra, papel e tesoura" />}
     </div>
   );
 }

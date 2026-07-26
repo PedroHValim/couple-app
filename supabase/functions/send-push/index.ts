@@ -41,10 +41,17 @@ Deno.serve(async (req) => {
       .eq('id', message.sender_id)
       .single();
 
+    // Convites de jogo (type = "convite:<gameKey>") abrem direto na tela do jogo.
+    let url = '';
+    if (typeof message.type === 'string' && message.type.startsWith('convite:')) {
+      const gameKey = message.type.slice('convite:'.length);
+      url = `#/jogos/${gameKey}`;
+    }
+
     const notificationPayload = JSON.stringify({
       title: sender?.name ? `${sender.name} 💛` : 'Nossa Órbita',
       body: message.body,
-      url: '/'
+      url
     });
 
     await webpush.sendNotification(sub.subscription, notificationPayload);

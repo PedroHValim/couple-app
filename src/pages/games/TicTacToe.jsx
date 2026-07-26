@@ -1,7 +1,9 @@
 import React from 'react';
 import { useAuth } from '../../lib/AuthContext';
 import { useGameSession } from '../../lib/useGameSession';
+import { useGamePresence } from '../../lib/useGamePresence';
 import GameHeader from '../../components/GameHeader';
+import InviteToPlay from '../../components/InviteToPlay';
 
 const LINES = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -20,9 +22,11 @@ function computeWinner(board) {
 const INITIAL_STATE = { board: Array(9).fill(null), turn: 'X' };
 
 export default function TicTacToe() {
-  const { session: authSession } = useAuth();
+  const { session: authSession, partner } = useAuth();
   const myId = authSession?.user?.id;
   const { session, updateState } = useGameSession('tictactoe', INITIAL_STATE);
+  const onlineIds = useGamePresence('tictactoe', myId);
+  const partnerOnline = !!partner?.id && onlineIds.includes(partner.id);
 
   if (!session) {
     return <div className="screen" style={{ padding: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
@@ -53,6 +57,8 @@ export default function TicTacToe() {
       <GameHeader
         title="Jogo da velha"
         description="Toquem alternadamente numa casa vazia. Quem alinhar 3 símbolos primeiro (na horizontal, vertical ou diagonal) vence. Se o tabuleiro encher sem ninguém alinhar, é empate."
+        partnerName={partner?.name}
+        partnerOnline={partnerOnline}
       />
 
       <p style={{ textAlign: 'center', color: winner ? 'var(--gold)' : 'var(--muted)', fontWeight: 700, marginBottom: 18 }}>
@@ -80,6 +86,7 @@ export default function TicTacToe() {
       </div>
 
       <button className="btn btn-outline" style={{ width: '100%' }} onClick={handleRestart}>Reiniciar</button>
+      {!partnerOnline && <InviteToPlay gameKey="velha" gameTitle="o Jogo da velha" />}
     </div>
   );
 }
