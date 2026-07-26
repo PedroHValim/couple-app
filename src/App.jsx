@@ -7,6 +7,9 @@ import Pairing from './pages/Pairing';
 import Home from './pages/Home';
 import Trips from './pages/Trips';
 import TripDetail from './pages/TripDetail';
+import Movies from './pages/Movies';
+import Games from './pages/Games';
+import TicTacToe from './pages/games/TicTacToe';
 import Profile from './pages/Profile';
 
 function Gate({ children }) {
@@ -35,6 +38,9 @@ function Shell() {
         <Route path="/" element={<Gate><Home /></Gate>} />
         <Route path="/viagens" element={<Gate><Trips /></Gate>} />
         <Route path="/viagens/:tripId" element={<Gate><TripDetail /></Gate>} />
+        <Route path="/filmes" element={<Gate><Movies /></Gate>} />
+        <Route path="/jogos" element={<Gate><Games /></Gate>} />
+        <Route path="/jogos/velha" element={<Gate><TicTacToe /></Gate>} />
         <Route path="/perfil" element={<Gate><Profile /></Gate>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -203,6 +203,104 @@ create policy "apagar foto de viagem do casal"
   );
 
 -- ------------------------------------------------------------
+-- 4b. MOVIES (lista de filmes compartilhada)
+-- ------------------------------------------------------------
+create table if not exists public.movies (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references public.profiles(id) on delete cascade default auth.uid(),
+  partner_id uuid,
+  title text not null,
+  genre text not null,
+  owner_rating smallint not null check (owner_rating between 1 and 10),
+  partner_rating smallint check (partner_rating between 1 and 10),
+  created_at timestamptz default now()
+);
+
+-- Preenche partner_id automaticamente ao cadastrar o filme, igual às viagens
+create or replace function public.set_movie_partner()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  new.owner_id := auth.uid();
+  select partner_id into new.partner_id from public.profiles where id = auth.uid();
+  return new;
+end;
+$$;
+
+drop trigger if exists before_movie_insert on public.movies;
+create trigger before_movie_insert
+  before insert on public.movies
+  for each row execute procedure public.set_movie_partner();
+
+alter table public.movies enable row level security;
+
+create policy "ver filmes do casal"
+  on public.movies for select
+  using (owner_id = auth.uid() or partner_id = auth.uid());
+
+create policy "cadastrar filme"
+  on public.movies for insert
+  with check (true); -- owner_id/partner_id são definidos pelo trigger acima
+
+create policy "avaliar filme do casal"
+  on public.movies for update
+  using (owner_id = auth.uid() or partner_id = auth.uid());
+
+create policy "apagar filme do casal"
+  on public.movies for delete
+  using (owner_id = auth.uid() or partner_id = auth.uid());
+
+alter publication supabase_realtime add table public.movies;
+
+-- ------------------------------------------------------------
+-- 4c. GAME_SESSIONS (jogos rápidos em tempo real, ex: jogo da velha)
+-- ------------------------------------------------------------
+create table if not exists public.game_sessions (
+  id uuid primary key default gen_random_uuid(),
+  game text not null,
+  owner_id uuid references public.profiles(id) on delete cascade default auth.uid(),
+  partner_id uuid,
+  state jsonb not null default '{}'::jsonb,
+  updated_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+
+create or replace function public.set_game_partner()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  new.owner_id := auth.uid();
+  select partner_id into new.partner_id from public.profiles where id = auth.uid();
+  return new;
+end;
+$$;
+
+drop trigger if exists before_game_insert on public.game_sessions;
+create trigger before_game_insert
+  before insert on public.game_sessions
+  for each row execute procedure public.set_game_partner();
+
+alter table public.game_sessions enable row level security;
+
+create policy "ver jogos do casal"
+  on public.game_sessions for select
+  using (owner_id = auth.uid() or partner_id = auth.uid());
+
+create policy "criar jogo"
+  on public.game_sessions for insert
+  with check (true);
+
+create policy "jogar e reiniciar jogo do casal"
+  on public.game_sessions for update
+  using (owner_id = auth.uid() or partner_id = auth.uid());
+
+alter publication supabase_realtime add table public.game_sessions;
+
+-- ------------------------------------------------------------
 -- 5. PUSH_SUBSCRIPTIONS (notificações push reais)
 -- ------------------------------------------------------------
 create table if not exists public.push_subscriptions (

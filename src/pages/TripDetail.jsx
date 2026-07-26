@@ -3,13 +3,14 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { compressImage } from '../lib/compressImage';
 import { useLongPress } from '../lib/useLongPress';
-import { ChevronLeftIcon, PlusIcon } from '../components/Icons';
+import { ChevronLeftIcon, PlusIcon, CloseIcon } from '../components/Icons';
 
 export default function TripDetail() {
   const { tripId } = useParams();
   const [trip, setTrip] = useState(null);
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [openImage, setOpenImage] = useState(null);
   const fileInputRef = useRef(null);
 
   async function loadAll() {
@@ -91,24 +92,50 @@ export default function TripDetail() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {images.map((img) => (
-            <GalleryPhoto key={img.id} img={img} onDelete={() => deleteImage(img)} />
+            <GalleryPhoto
+              key={img.id}
+              img={img}
+              onOpen={() => setOpenImage(img.image_url)}
+              onDelete={() => deleteImage(img)}
+            />
           ))}
         </div>
         {images.length === 0 && <p style={{ color: 'var(--muted)', fontSize: 13.5 }}>Nenhuma foto ainda. Adicione as primeiras lembranças dessa viagem.</p>}
       </div>
+
+      {openImage && (
+        <div
+          onClick={() => setOpenImage(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(10,10,25,0.95)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}
+        >
+          <button
+            onClick={() => setOpenImage(null)}
+            style={{ position: 'absolute', top: 18, right: 18, background: 'rgba(255,255,255,0.12)', borderRadius: 999, padding: 8, display: 'flex' }}
+          >
+            <CloseIcon width={20} height={20} style={{ color: 'var(--cream)' }} />
+          </button>
+          <img src={openImage} alt="" style={{ maxWidth: '92vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 8 }} />
+        </div>
+      )}
     </div>
   );
 }
 
-function GalleryPhoto({ img, onDelete }) {
-  const { handlers } = useLongPress(onDelete);
+function GalleryPhoto({ img, onOpen, onDelete }) {
+  const { handlers, wasLongPress } = useLongPress(onDelete);
   return (
     <div
       {...handlers}
+      onClick={() => { if (!wasLongPress()) onOpen(); }}
       role="img"
       aria-label="Foto da viagem"
       style={{
         ...handlers.style,
+        cursor: 'pointer',
         width: '100%',
         aspectRatio: '1/1',
         borderRadius: 14,

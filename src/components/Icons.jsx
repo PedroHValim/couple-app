@@ -35,6 +35,15 @@ export const LogoutIcon = (p) => (
 export const ChevronLeftIcon = (p) => (
   <svg {...base} {...p}><path d="M15 18l-6-6 6-6"/></svg>
 );
+export const CloseIcon = (p) => (
+  <svg {...base} {...p}><path d="M6 6l12 12M18 6L6 18"/></svg>
+);
+export const FilmIcon = (p) => (
+  <svg {...base} {...p}><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 15h18M8 4v5M8 15v5M16 4v5M16 15v5"/></svg>
+);
+export const GameIcon = (p) => (
+  <svg {...base} {...p}><rect x="2.5" y="8" width="19" height="9" rx="4.5"/><path d="M7 10.5v4M5 12.5h4"/><circle cx="16" cy="11" r="1"/><circle cx="18.5" cy="13.5" r="1"/></svg>
+);
 
 export const ICONS_BY_KEY = {
   sun: SunIcon,
