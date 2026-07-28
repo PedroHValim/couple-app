@@ -45,7 +45,10 @@ function dropInColumn(board, col, symbol) {
   return null;
 }
 
-const INITIAL_STATE = { board: Array(COLS * ROWS).fill(null), turn: 'X' };
+function freshState(starter) {
+  return { board: Array(COLS * ROWS).fill(null), turn: starter, startedBy: starter };
+}
+const INITIAL_STATE = freshState('X');
 
 export default function ConnectFour() {
   const { session: authSession, partner } = useAuth();
@@ -66,11 +69,12 @@ export default function ConnectFour() {
     if (winner || turn !== mySymbol) return;
     const nextBoard = dropInColumn(board, col, mySymbol);
     if (!nextBoard) return; // coluna cheia
-    updateState({ board: nextBoard, turn: mySymbol === 'X' ? 'O' : 'X' });
+    updateState({ ...session.state, board: nextBoard, turn: mySymbol === 'X' ? 'O' : 'X' });
   }
 
   function handleRestart() {
-    updateState(INITIAL_STATE);
+    const nextStarter = session.state.startedBy === 'X' ? 'O' : 'X';
+    updateState(freshState(nextStarter));
   }
 
   let statusText;
@@ -79,7 +83,7 @@ export default function ConnectFour() {
   else statusText = turn === mySymbol ? 'Sua vez' : 'Vez do seu par';
 
   return (
-    <div className="screen" style={{ padding: 20, paddingTop: 'calc(20px + env(safe-area-inset-top))' }}>
+    <div className="screen" style={{ padding: 20 }}>
       <GameHeader
         title="Lig-4"
         description="Toquem numa coluna pra soltar sua peça (🟡 ou 🟣) — ela cai até o espaço vazio mais baixo. Quem alinhar 4 peças primeiro (horizontal, vertical ou diagonal) vence."

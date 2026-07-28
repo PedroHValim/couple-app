@@ -15,6 +15,7 @@ create table if not exists public.profiles (
   avatar_url text,
   invite_code text unique,
   partner_id uuid references public.profiles(id) on delete set null,
+  anniversary_date date,
   created_at timestamptz default now()
 );
 
@@ -73,6 +74,24 @@ begin
 
   update public.profiles set partner_id = target_id where id = auth.uid();
   update public.profiles set partner_id = auth.uid() where id = target_id;
+end;
+$$;
+
+-- RPC pra gravar a data do pedido de namoro nos dois perfis do casal de uma vez
+-- (é um dado do casal, não de cada pessoa — os dois têm que ver o mesmo valor)
+create or replace function public.set_anniversary_date(new_date date)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  my_partner uuid;
+begin
+  select partner_id into my_partner from public.profiles where id = auth.uid();
+  update public.profiles set anniversary_date = new_date where id = auth.uid();
+  if my_partner is not null then
+    update public.profiles set anniversary_date = new_date where id = my_partner;
+  end if;
 end;
 $$;
 

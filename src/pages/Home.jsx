@@ -10,6 +10,7 @@ import { avatarDivIcon } from '../components/AvatarMarker';
 import MessageButtons from '../components/MessageButtons';
 import { QUICK_MESSAGES } from '../lib/messages';
 import { BellIcon, CloseIcon, ICONS_BY_KEY } from '../components/Icons';
+import FallingHearts from '../components/FallingHearts';
 import '../components/mapMarkers.css';
 
 const LAST_SEEN_KEY = 'nossa-orbita-last-seen-msg';
@@ -70,6 +71,9 @@ export default function Home() {
   const partnerPoint = locations[partner?.id] ? [locations[partner.id].lat, locations[partner.id].lng] : null;
   const points = useMemo(() => [mePoint, partnerPoint].filter(Boolean), [mePoint, partnerPoint]);
 
+  const daysTogether = getDaysTogether(profile?.anniversary_date);
+  const isAnniversary = isAnniversaryToday(profile?.anniversary_date);
+
   return (
     <div className="screen" style={{ display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '20px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -119,6 +123,31 @@ export default function Home() {
       </div>
 
       <MessageButtons myId={myId} partnerId={partner?.id} />
+
+      {daysTogether != null && (
+        <div
+          className="card"
+          style={{
+            margin: '16px 20px 0',
+            textAlign: 'center',
+            ...(isAnniversary ? { border: '1px solid var(--gold)', background: 'rgba(244,201,93,0.14)' } : {})
+          }}
+        >
+          {isAnniversary ? (
+            <>
+              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--gold)' }}>🎉 Feliz aniversário de namoro! 🎉</p>
+              <p className="eyebrow" style={{ marginTop: 6 }}>{daysTogether} dias juntos</p>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: 24, fontWeight: 800, color: 'var(--gold)' }}>{daysTogether}</p>
+              <p className="eyebrow">dias juntos</p>
+            </>
+          )}
+        </div>
+      )}
+
+      {isAnniversary && <FallingHearts />}
 
       {toast && (
         <div style={{
@@ -188,6 +217,27 @@ function Banner({ text, action }) {
       <span style={{ flex: 1 }}>{text}</span>
       {action && <button className="btn btn-outline" style={{ padding: '8px 12px', fontSize: 12 }} onClick={action.onClick}>{action.label}</button>}
     </div>
+  );
+}
+
+function getDaysTogether(anniversaryDate) {
+  if (!anniversaryDate) return null;
+  const start = new Date(anniversaryDate + 'T00:00:00');
+  const today = new Date();
+  start.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((today - start) / 86400000);
+  return diff >= 0 ? diff : null;
+}
+
+function isAnniversaryToday(anniversaryDate) {
+  if (!anniversaryDate) return false;
+  const start = new Date(anniversaryDate + 'T00:00:00');
+  const today = new Date();
+  return (
+    today.getMonth() === start.getMonth() &&
+    today.getDate() === start.getDate() &&
+    today.getFullYear() > start.getFullYear()
   );
 }
 

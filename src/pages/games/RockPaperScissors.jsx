@@ -53,7 +53,7 @@ export default function RockPaperScissors() {
   else statusText = 'Escolha sua jogada';
 
   return (
-    <div className="screen" style={{ padding: 20, paddingTop: 'calc(20px + env(safe-area-inset-top))' }}>
+    <div className="screen" style={{ padding: 20 }}>
       <GameHeader
         title="Pedra, papel e tesoura"
         description="Os dois escolhem ao mesmo tempo, sem ver a jogada um do outro. Pedra ganha de tesoura, tesoura ganha de papel, papel ganha de pedra. Escolha igual é empate."

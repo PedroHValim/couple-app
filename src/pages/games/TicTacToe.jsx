@@ -19,7 +19,10 @@ function computeWinner(board) {
   return null;
 }
 
-const INITIAL_STATE = { board: Array(9).fill(null), turn: 'X' };
+function freshState(starter) {
+  return { board: Array(9).fill(null), turn: starter, startedBy: starter };
+}
+const INITIAL_STATE = freshState('X');
 
 export default function TicTacToe() {
   const { session: authSession, partner } = useAuth();
@@ -40,11 +43,12 @@ export default function TicTacToe() {
     if (board[i] || winner || turn !== mySymbol) return;
     const nextBoard = [...board];
     nextBoard[i] = mySymbol;
-    updateState({ board: nextBoard, turn: mySymbol === 'X' ? 'O' : 'X' });
+    updateState({ ...session.state, board: nextBoard, turn: mySymbol === 'X' ? 'O' : 'X' });
   }
 
   function handleRestart() {
-    updateState(INITIAL_STATE);
+    const nextStarter = session.state.startedBy === 'X' ? 'O' : 'X';
+    updateState(freshState(nextStarter));
   }
 
   let statusText;
@@ -53,7 +57,7 @@ export default function TicTacToe() {
   else statusText = turn === mySymbol ? 'Sua vez' : 'Vez do seu par';
 
   return (
-    <div className="screen" style={{ padding: 20, paddingTop: 'calc(20px + env(safe-area-inset-top))' }}>
+    <div className="screen" style={{ padding: 20 }}>
       <GameHeader
         title="Jogo da velha"
         description="Toquem alternadamente numa casa vazia. Quem alinhar 3 símbolos primeiro (na horizontal, vertical ou diagonal) vence. Se o tabuleiro encher sem ninguém alinhar, é empate."

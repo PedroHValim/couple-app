@@ -7,7 +7,9 @@ import { CameraIcon, LogoutIcon } from '../components/Icons';
 export default function Profile() {
   const { profile, partner, signOut, refreshProfile } = useAuth();
   const [name, setName] = useState(profile?.name || '');
+  const [anniversary, setAnniversary] = useState(profile?.anniversary_date || '');
   const [saving, setSaving] = useState(false);
+  const [savingAnniversary, setSavingAnniversary] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef(null);
 
@@ -16,6 +18,13 @@ export default function Profile() {
     await supabase.from('profiles').update({ name }).eq('id', profile.id);
     await refreshProfile();
     setSaving(false);
+  }
+
+  async function saveAnniversary() {
+    setSavingAnniversary(true);
+    await supabase.rpc('set_anniversary_date', { new_date: anniversary || null });
+    await refreshProfile();
+    setSavingAnniversary(false);
   }
 
   async function handleAvatar(e) {
@@ -61,6 +70,15 @@ export default function Profile() {
         <p className="eyebrow">seu nome</p>
         <input className="field" value={name} onChange={(e) => setName(e.target.value)} />
         <button className="btn btn-primary" onClick={saveName} disabled={saving}>{saving ? 'Salvando…' : 'Salvar nome'}</button>
+      </div>
+
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+        <p className="eyebrow">pedido de namoro</p>
+        <input className="field" type="date" value={anniversary} onChange={(e) => setAnniversary(e.target.value)} max={new Date().toISOString().slice(0, 10)} />
+        <button className="btn btn-primary" onClick={saveAnniversary} disabled={savingAnniversary || !anniversary}>
+          {savingAnniversary ? 'Salvando…' : 'Salvar data'}
+        </button>
+        <p style={{ fontSize: 11.5, color: 'var(--muted)' }}>Vale pros dois — aparece na tela inicial a contagem de dias juntos.</p>
       </div>
 
       {partner && (
