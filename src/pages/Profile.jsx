@@ -2,10 +2,12 @@ import React, { useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
 import { compressImage } from '../lib/compressImage';
+import { useTheme, THEMES } from '../lib/useTheme';
 import { CameraIcon, LogoutIcon } from '../components/Icons';
 
 export default function Profile() {
   const { profile, partner, signOut, refreshProfile } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [name, setName] = useState(profile?.name || '');
   const [anniversary, setAnniversary] = useState(profile?.anniversary_date || '');
   const [saving, setSaving] = useState(false);
@@ -46,7 +48,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="screen" style={{ padding: 20 }}>
+    <div className="screen" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 20 }}>
       <p className="eyebrow">seu perfil</p>
       <h1 style={{ fontSize: 24, marginTop: 4, marginBottom: 20 }}>Ajustes</h1>
 
@@ -79,6 +81,30 @@ export default function Profile() {
           {savingAnniversary ? 'Salvando…' : 'Salvar data'}
         </button>
         <p style={{ fontSize: 11.5, color: 'var(--muted)' }}>Vale pros dois — aparece na tela inicial a contagem de dias juntos.</p>
+      </div>
+
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+        <p className="eyebrow">cor do app</p>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {THEMES.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTheme(t.key)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                background: 'none', border: 'none', padding: 4
+              }}
+            >
+              <span style={{
+                width: 36, height: 36, borderRadius: '50%', background: t.swatch,
+                border: theme === t.key ? '3px solid var(--cream)' : '3px solid transparent',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+              }} />
+              <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{t.label}</span>
+            </button>
+          ))}
+        </div>
+        <p style={{ fontSize: 11.5, color: 'var(--muted)' }}>Só muda no seu aparelho — cada um pode escolher a sua.</p>
       </div>
 
       {partner && (

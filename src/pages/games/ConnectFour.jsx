@@ -58,7 +58,7 @@ export default function ConnectFour() {
   const partnerOnline = !!partner?.id && onlineIds.includes(partner.id);
 
   if (!session) {
-    return <div className="screen" style={{ padding: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
+    return <div className="screen" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
   }
 
   const mySymbol = session.owner_id === myId ? 'X' : 'O';
@@ -83,7 +83,7 @@ export default function ConnectFour() {
   else statusText = turn === mySymbol ? 'Sua vez' : 'Vez do seu par';
 
   return (
-    <div className="screen" style={{ padding: 20 }}>
+    <div className="screen" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 20 }}>
       <GameHeader
         title="Lig-4"
         description="Toquem numa coluna pra soltar sua peça (🟡 ou 🟣) — ela cai até o espaço vazio mais baixo. Quem alinhar 4 peças primeiro (horizontal, vertical ou diagonal) vence."

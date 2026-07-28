@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
 import { useMovies } from '../lib/useMovies';
 import { useLongPress } from '../lib/useLongPress';
-import { TMDB_ENABLED, searchMovies, posterUrl } from '../lib/tmdb';
+import { TMDB_ENABLED, searchMovies, posterUrl, getWatchProviders } from '../lib/tmdb';
 import { PlusIcon, FilmIcon, CloseIcon } from '../components/Icons';
 
 const RATINGS = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -136,6 +136,17 @@ function MovieCard({ movie, myId, onOpen, onDelete, onChanged }) {
 
 function MovieDetail({ movie, onClose }) {
   const poster = posterUrl(movie.poster_path);
+  const [providers, setProviders] = useState(undefined); // undefined = carregando, null = sem dado
+
+  useEffect(() => {
+    let active = true;
+    setProviders(undefined);
+    getWatchProviders(movie.tmdb_id).then((r) => { if (active) setProviders(r); });
+    return () => { active = false; };
+  }, [movie.tmdb_id]);
+
+  const streamingList = providers?.streaming || [];
+
   return (
     <div
       onClick={onClose}
@@ -178,9 +189,32 @@ function MovieDetail({ movie, onClose }) {
         </div>
 
         <p className="eyebrow" style={{ marginBottom: 6 }}>sinopse</p>
-        <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--cream)', marginBottom: 4 }}>
+        <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--cream)', marginBottom: 16 }}>
           {movie.overview || 'Sem sinopse disponível pra esse filme (foi cadastrado manualmente).'}
         </p>
+
+        {movie.tmdb_id && (
+          <>
+            <p className="eyebrow" style={{ marginBottom: 8 }}>onde assistir</p>
+            {providers === undefined ? (
+              <p style={{ fontSize: 13, color: 'var(--muted)' }}>Buscando…</p>
+            ) : streamingList.length > 0 ? (
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {streamingList.map((p) => (
+                  <div key={p.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: 56 }}>
+                    <img src={p.logo} alt={p.name} style={{ width: 40, height: 40, borderRadius: 10 }} />
+                    <span style={{ fontSize: 9.5, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.2 }}>{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ fontSize: 13, color: 'var(--muted)' }}>Não achamos em nenhum streaming por assinatura no Brasil agora.</p>
+            )}
+            {providers?.link && (
+              <p style={{ fontSize: 10.5, color: 'var(--muted)', opacity: 0.6, marginTop: 8 }}>Dados de streaming via JustWatch/TMDB</p>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

@@ -39,6 +39,31 @@ export function AuthProvider({ children }) {
     return () => sub.subscription.unsubscribe();
   }, [loadProfile]);
 
+  // Mantém meu perfil e o do meu par sincronizados ao vivo — se um dos dois
+  // mudar nome, foto ou data de namoro, o outro vê na hora, sem recarregar o app.
+  useEffect(() => {
+    const myId = session?.user?.id;
+    if (!myId) return;
+    const partnerId = profile?.partner_id;
+
+    const channel = supabase.channel('profiles-couple-sync').on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${myId}` },
+      (payload) => setProfile(payload.new)
+    );
+
+    if (partnerId) {
+      channel.on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${partnerId}` },
+        (payload) => setPartner(payload.new)
+      );
+    }
+
+    channel.subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [session?.user?.id, profile?.partner_id]);
+
   const refreshProfile = useCallback(() => {
     if (session) return loadProfile(session.user.id);
   }, [session, loadProfile]);

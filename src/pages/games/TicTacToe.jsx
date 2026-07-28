@@ -32,7 +32,7 @@ export default function TicTacToe() {
   const partnerOnline = !!partner?.id && onlineIds.includes(partner.id);
 
   if (!session) {
-    return <div className="screen" style={{ padding: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
+    return <div className="screen" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
   }
 
   const mySymbol = session.owner_id === myId ? 'X' : 'O';
@@ -57,7 +57,7 @@ export default function TicTacToe() {
   else statusText = turn === mySymbol ? 'Sua vez' : 'Vez do seu par';
 
   return (
-    <div className="screen" style={{ padding: 20 }}>
+    <div className="screen" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 20 }}>
       <GameHeader
         title="Jogo da velha"
         description="Toquem alternadamente numa casa vazia. Quem alinhar 3 símbolos primeiro (na horizontal, vertical ou diagonal) vence. Se o tabuleiro encher sem ninguém alinhar, é empate."

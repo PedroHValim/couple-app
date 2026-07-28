@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext';
+import { useTheme } from './lib/useTheme';
 import BottomNav from './components/BottomNav';
 import Login from './pages/Login';
 import Pairing from './pages/Pairing';
@@ -31,6 +32,7 @@ function Gate({ children }) {
 function Shell() {
   const { session, profile } = useAuth();
   const showNav = session && profile?.partner_id;
+  useTheme();
 
   return (
     <div className="app-shell">

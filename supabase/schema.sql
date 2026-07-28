@@ -362,6 +362,7 @@ $$;
 -- ------------------------------------------------------------
 alter publication supabase_realtime add table public.locations;
 alter publication supabase_realtime add table public.messages;
+alter publication supabase_realtime add table public.profiles;
 
 -- ------------------------------------------------------------
 -- 8. STORAGE BUCKETS (rode também pelo Dashboard > Storage se preferir)

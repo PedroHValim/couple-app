@@ -4,6 +4,7 @@
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
+const LOGO_BASE = 'https://image.tmdb.org/t/p/w92';
 
 export const TMDB_ENABLED = !!API_KEY;
 
@@ -38,5 +39,27 @@ export async function searchMovies(query) {
     }));
   } catch {
     return [];
+  }
+}
+
+// Onde assistir (streaming, aluguel, compra) no Brasil — dados vêm do JustWatch
+// via TMDB. Busca sob demanda (não guardamos no banco: catálogo muda toda hora).
+export async function getWatchProviders(tmdbId) {
+  if (!TMDB_ENABLED || !tmdbId) return null;
+  try {
+    const res = await fetch(`${BASE_URL}/movie/${tmdbId}/watch/providers?api_key=${API_KEY}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const br = data.results?.BR;
+    if (!br) return null;
+    const toList = (arr) => (arr || []).map((p) => ({ name: p.provider_name, logo: `${LOGO_BASE}${p.logo_path}` }));
+    return {
+      link: br.link,
+      streaming: toList(br.flatrate),
+      rent: toList(br.rent),
+      buy: toList(br.buy)
+    };
+  } catch {
+    return null;
   }
 }

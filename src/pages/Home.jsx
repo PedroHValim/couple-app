@@ -1,34 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
 import { useLocationSync } from '../lib/useLocationSync';
 import { useCoupleLocations } from '../lib/useCoupleLocations';
 import { useIncomingMessages } from '../lib/useIncomingMessages';
 import { usePushSubscription } from '../lib/usePushSubscription';
-import { avatarDivIcon } from '../components/AvatarMarker';
 import MessageButtons from '../components/MessageButtons';
+import ProximityWidget from '../components/ProximityWidget';
 import { QUICK_MESSAGES } from '../lib/messages';
 import { BellIcon, CloseIcon, ICONS_BY_KEY } from '../components/Icons';
 import FallingHearts from '../components/FallingHearts';
-import '../components/mapMarkers.css';
 
 const LAST_SEEN_KEY = 'nossa-orbita-last-seen-msg';
-
-const FALLBACK_CENTER = [-23.5505, -46.6333]; // São Paulo, usado só se ninguém tiver localização ainda
-
-function Recenter({ points }) {
-  const map = useMap();
-  useEffect(() => {
-    if (points.length === 0) return;
-    if (points.length === 1) {
-      map.setView(points[0], 15);
-    } else {
-      map.fitBounds(points, { padding: [60, 60], maxZoom: 15 });
-    }
-  }, [JSON.stringify(points)]); // eslint-disable-line react-hooks/exhaustive-deps
-  return null;
-}
 
 export default function Home() {
   const { session, profile, partner } = useAuth();
@@ -69,7 +52,6 @@ export default function Home() {
 
   const mePoint = locations[myId] ? [locations[myId].lat, locations[myId].lng] : null;
   const partnerPoint = locations[partner?.id] ? [locations[partner.id].lat, locations[partner.id].lng] : null;
-  const points = useMemo(() => [mePoint, partnerPoint].filter(Boolean), [mePoint, partnerPoint]);
 
   const daysTogether = getDaysTogether(profile?.anniversary_date);
   const isAnniversary = isAnniversaryToday(profile?.anniversary_date);
@@ -79,7 +61,7 @@ export default function Home() {
       <div style={{ padding: '20px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <p className="eyebrow">nossa órbita</p>
-          <h1 style={{ fontSize: 24, marginTop: 4 }}>Onde vocês estão</h1>
+          <h1 style={{ fontSize: 24, marginTop: 4 }}>Vocês dois</h1>
         </div>
         <button
           onClick={openHistory}
@@ -93,7 +75,7 @@ export default function Home() {
       </div>
 
       {locStatus === 'denied' && (
-        <Banner text="Ative a permissão de localização nas configurações do navegador para aparecer no mapa." />
+        <Banner text="Ative a permissão de localização nas configurações do navegador pra ver a distância entre vocês." />
       )}
       {pushState === 'idle' && (
         <Banner
@@ -102,25 +84,7 @@ export default function Home() {
         />
       )}
 
-      <div style={{ height: 340, margin: '0 20px 16px', borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', position: 'relative', zIndex: 0 }}>
-        <MapContainer center={points[0] || FALLBACK_CENTER} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={false}>
-          <TileLayer
-            attribution='&copy; OpenStreetMap contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <Recenter points={points} />
-          {mePoint && (
-            <Marker position={mePoint} icon={avatarDivIcon({ avatarUrl: profile?.avatar_url, name: profile?.name, borderColor: '#F4C95D' })}>
-              <Popup>Você — {formatUpdated(locations[myId]?.updated_at)}</Popup>
-            </Marker>
-          )}
-          {partnerPoint && (
-            <Marker position={partnerPoint} icon={avatarDivIcon({ avatarUrl: partner?.avatar_url, name: partner?.name, borderColor: '#9B94E0' })}>
-              <Popup>{partner?.name} — {formatUpdated(locations[partner.id]?.updated_at)}</Popup>
-            </Marker>
-          )}
-        </MapContainer>
-      </div>
+      <ProximityWidget me={profile} partner={partner} mePoint={mePoint} partnerPoint={partnerPoint} />
 
       <MessageButtons myId={myId} partnerId={partner?.id} />
 

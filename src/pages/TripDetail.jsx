@@ -56,7 +56,7 @@ export default function TripDetail() {
   }
 
   if (!trip) {
-    return <div className="screen" style={{ padding: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
+    return <div className="screen" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
   }
 
   return (

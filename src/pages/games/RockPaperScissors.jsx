@@ -28,7 +28,7 @@ export default function RockPaperScissors() {
   const partnerOnline = !!partner?.id && onlineIds.includes(partner.id);
 
   if (!session) {
-    return <div className="screen" style={{ padding: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
+    return <div className="screen" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 20 }}><p style={{ color: 'var(--muted)' }}>Carregando…</p></div>;
   }
 
   const isOwner = session.owner_id === myId;
@@ -53,7 +53,7 @@ export default function RockPaperScissors() {
   else statusText = 'Escolha sua jogada';
 
   return (
-    <div className="screen" style={{ padding: 20 }}>
+    <div className="screen" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 20 }}>
       <GameHeader
         title="Pedra, papel e tesoura"
         description="Os dois escolhem ao mesmo tempo, sem ver a jogada um do outro. Pedra ganha de tesoura, tesoura ganha de papel, papel ganha de pedra. Escolha igual é empate."
