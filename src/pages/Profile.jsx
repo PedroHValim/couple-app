@@ -128,39 +128,13 @@ export default function Profile() {
           ))}
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          {profile?.avatar_style === 'rpm' ? (
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={useRealPhoto}>Usar foto real</button>
-          ) : profile?.avatar_style ? (
+          {profile?.avatar_style && profile.avatar_style !== FULL_BODY_STYLE && (
             <>
               <button className="btn btn-outline" style={{ flex: 1 }} onClick={shuffleAvatar}>🎲 Sortear outro</button>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={useRealPhoto}>Usar foto real</button>
             </>
-          ) : null}
+          )}
         </div>
-      </div>
-
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-        <p className="eyebrow">avatar 3D com a sua cara (Ready Player Me)</p>
-        <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-          Crie de graça em <strong>readyplayer.me</strong> a partir de uma selfie (corpo inteiro), copie o link do
-          seu avatar e cole aqui.
-        </p>
-        {profile?.avatar_style === 'rpm' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={rpmAvatarUrl(profile.avatar_seed)} alt="" style={{ height: 64, width: 'auto' }} />
-            <span style={{ fontSize: 12, color: 'var(--gold)' }}>Avatar ativo ✓</span>
-          </div>
-        )}
-        <input
-          className="field"
-          placeholder="Cole o link do seu avatar aqui"
-          value={rpmInput}
-          onChange={(e) => setRpmInput(e.target.value)}
-        />
-        {rpmError && <p style={{ color: 'var(--danger)', fontSize: 12.5 }}>{rpmError}</p>}
-        <button className="btn btn-primary" onClick={saveRpmAvatar} disabled={savingRpm || !rpmInput.trim()}>
-          {savingRpm ? 'Salvando…' : 'Usar esse avatar'}
-        </button>
       </div>
 
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
