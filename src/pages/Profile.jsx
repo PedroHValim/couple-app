@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
 import { compressImage } from '../lib/compressImage';
 import { useTheme, THEMES } from '../lib/useTheme';
-import { AVATAR_STYLES, avatarUrl, randomSeed, displayAvatarUrl } from '../lib/dicebear';
+import { AVATAR_STYLES, avatarUrl, randomSeed, displayAvatarUrl, FULL_BODY_STYLE } from '../lib/dicebear';
 import { CameraIcon, LogoutIcon } from '../components/Icons';
 
 export default function Profile() {
@@ -14,6 +14,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [savingAnniversary, setSavingAnniversary] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [fullBodyUpload, setFullBodyUpload] = useState(false);
   const fileRef = useRef(null);
 
   async function saveName() {
@@ -40,8 +41,10 @@ export default function Profile() {
       const { error } = await supabase.storage.from('avatars').upload(path, compressed, { upsert: true });
       if (!error) {
         const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
-        // Subir uma foto de novo volta a usar a foto real, mesmo se tinha um avatar de desenho escolhido.
-        await supabase.from('profiles').update({ avatar_url: pub.publicUrl, avatar_style: null }).eq('id', profile.id);
+        await supabase.from('profiles').update({
+          avatar_url: pub.publicUrl,
+          avatar_style: fullBodyUpload ? FULL_BODY_STYLE : null
+        }).eq('id', profile.id);
         await refreshProfile();
       }
     } finally {
@@ -50,17 +53,20 @@ export default function Profile() {
   }
 
   async function chooseAvatarStyle(style) {
-    await supabase.from('profiles').update({ avatar_style: style, avatar_seed: profile.id }).eq('id', profile.id);
+    const { error } = await supabase.from('profiles').update({ avatar_style: style, avatar_seed: profile.id }).eq('id', profile.id);
+    if (error) { window.alert('Erro ao salvar avatar: ' + error.message); return; }
     await refreshProfile();
   }
 
   async function shuffleAvatar() {
-    await supabase.from('profiles').update({ avatar_seed: randomSeed() }).eq('id', profile.id);
+    const { error } = await supabase.from('profiles').update({ avatar_seed: randomSeed() }).eq('id', profile.id);
+    if (error) { window.alert('Erro ao salvar avatar: ' + error.message); return; }
     await refreshProfile();
   }
 
   async function useRealPhoto() {
-    await supabase.from('profiles').update({ avatar_style: null }).eq('id', profile.id);
+    const { error } = await supabase.from('profiles').update({ avatar_style: null }).eq('id', profile.id);
+    if (error) { window.alert('Erro ao salvar avatar: ' + error.message); return; }
     await refreshProfile();
   }
 
@@ -84,6 +90,19 @@ export default function Profile() {
         </button>
         <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatar} style={{ display: 'none' }} />
         <p style={{ fontSize: 12, color: 'var(--muted)' }}>{uploading ? 'Enviando foto…' : 'Toque para trocar a foto'}</p>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--muted)' }}>
+          <input type="checkbox" checked={fullBodyUpload} onChange={(e) => setFullBodyUpload(e.target.checked)} />
+          Essa imagem é de corpo inteiro (ex: um avatar 3D)
+        </label>
+      </div>
+
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+        <p className="eyebrow">quer um avatar com a sua cara?</p>
+        <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
+          Crie de graça em algum site tipo <strong>avaturn.me</strong> (a partir de uma selfie), baixe a imagem
+          gerada, marque a caixinha "corpo inteiro" acima e envie ela pelo botão de foto. Assim não dependemos de
+          nenhum serviço externo ficar no ar pra sempre — a imagem fica guardada aqui no app.
+        </p>
       </div>
 
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
@@ -109,13 +128,39 @@ export default function Profile() {
           ))}
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          {profile?.avatar_style && (
+          {profile?.avatar_style === 'rpm' ? (
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={useRealPhoto}>Usar foto real</button>
+          ) : profile?.avatar_style ? (
             <>
               <button className="btn btn-outline" style={{ flex: 1 }} onClick={shuffleAvatar}>🎲 Sortear outro</button>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={useRealPhoto}>Usar foto real</button>
             </>
-          )}
+          ) : null}
         </div>
+      </div>
+
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+        <p className="eyebrow">avatar 3D com a sua cara (Ready Player Me)</p>
+        <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
+          Crie de graça em <strong>readyplayer.me</strong> a partir de uma selfie (corpo inteiro), copie o link do
+          seu avatar e cole aqui.
+        </p>
+        {profile?.avatar_style === 'rpm' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src={rpmAvatarUrl(profile.avatar_seed)} alt="" style={{ height: 64, width: 'auto' }} />
+            <span style={{ fontSize: 12, color: 'var(--gold)' }}>Avatar ativo ✓</span>
+          </div>
+        )}
+        <input
+          className="field"
+          placeholder="Cole o link do seu avatar aqui"
+          value={rpmInput}
+          onChange={(e) => setRpmInput(e.target.value)}
+        />
+        {rpmError && <p style={{ color: 'var(--danger)', fontSize: 12.5 }}>{rpmError}</p>}
+        <button className="btn btn-primary" onClick={saveRpmAvatar} disabled={savingRpm || !rpmInput.trim()}>
+          {savingRpm ? 'Salvando…' : 'Usar esse avatar'}
+        </button>
       </div>
 
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
