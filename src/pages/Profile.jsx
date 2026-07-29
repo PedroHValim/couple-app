@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
 import { compressImage } from '../lib/compressImage';
 import { useTheme, THEMES } from '../lib/useTheme';
-import { AVATAR_STYLES, avatarUrl, randomSeed, displayAvatarUrl, FULL_BODY_STYLE } from '../lib/dicebear';
 import { CameraIcon, LogoutIcon } from '../components/Icons';
 
 export default function Profile() {
@@ -14,7 +13,6 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [savingAnniversary, setSavingAnniversary] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [fullBodyUpload, setFullBodyUpload] = useState(false);
   const fileRef = useRef(null);
 
   async function saveName() {
@@ -41,33 +39,12 @@ export default function Profile() {
       const { error } = await supabase.storage.from('avatars').upload(path, compressed, { upsert: true });
       if (!error) {
         const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
-        await supabase.from('profiles').update({
-          avatar_url: pub.publicUrl,
-          avatar_style: fullBodyUpload ? FULL_BODY_STYLE : null
-        }).eq('id', profile.id);
+        await supabase.from('profiles').update({ avatar_url: pub.publicUrl }).eq('id', profile.id);
         await refreshProfile();
       }
     } finally {
       setUploading(false);
     }
-  }
-
-  async function chooseAvatarStyle(style) {
-    const { error } = await supabase.from('profiles').update({ avatar_style: style, avatar_seed: profile.id }).eq('id', profile.id);
-    if (error) { window.alert('Erro ao salvar avatar: ' + error.message); return; }
-    await refreshProfile();
-  }
-
-  async function shuffleAvatar() {
-    const { error } = await supabase.from('profiles').update({ avatar_seed: randomSeed() }).eq('id', profile.id);
-    if (error) { window.alert('Erro ao salvar avatar: ' + error.message); return; }
-    await refreshProfile();
-  }
-
-  async function useRealPhoto() {
-    const { error } = await supabase.from('profiles').update({ avatar_style: null }).eq('id', profile.id);
-    if (error) { window.alert('Erro ao salvar avatar: ' + error.message); return; }
-    await refreshProfile();
   }
 
   return (
@@ -80,61 +57,15 @@ export default function Profile() {
           onClick={() => fileRef.current?.click()}
           style={{
             width: 96, height: 96, borderRadius: '50%', border: '3px solid var(--gold)',
-            backgroundColor: 'var(--night-3)',
-            backgroundImage: displayAvatarUrl(profile) ? `url(${displayAvatarUrl(profile)})` : 'none',
+            background: profile?.avatar_url ? `url(${profile.avatar_url})` : 'var(--night-3)',
             backgroundSize: 'cover', backgroundPosition: 'center',
             display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'
           }}
         >
-          {!displayAvatarUrl(profile) && <CameraIcon width={26} height={26} />}
+          {!profile?.avatar_url && <CameraIcon width={26} height={26} />}
         </button>
         <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatar} style={{ display: 'none' }} />
         <p style={{ fontSize: 12, color: 'var(--muted)' }}>{uploading ? 'Enviando foto…' : 'Toque para trocar a foto'}</p>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--muted)' }}>
-          <input type="checkbox" checked={fullBodyUpload} onChange={(e) => setFullBodyUpload(e.target.checked)} />
-          Essa imagem é de corpo inteiro (ex: um avatar 3D)
-        </label>
-      </div>
-
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-        <p className="eyebrow">quer um avatar com a sua cara?</p>
-        <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-          Crie de graça em algum site tipo <strong>avaturn.me</strong> (a partir de uma selfie), baixe a imagem
-          gerada, marque a caixinha "corpo inteiro" acima e envie ela pelo botão de foto. Assim não dependemos de
-          nenhum serviço externo ficar no ar pra sempre — a imagem fica guardada aqui no app.
-        </p>
-      </div>
-
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-        <p className="eyebrow">avatar de desenho</p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {AVATAR_STYLES.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => chooseAvatarStyle(s.key)}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 4 }}
-            >
-              <span
-                style={{
-                  width: 48, height: 48, borderRadius: '50%',
-                  backgroundColor: 'var(--night-3)',
-                  backgroundImage: `url(${avatarUrl(s.key, profile?.id || s.key)})`,
-                  backgroundSize: 'cover', backgroundPosition: 'center',
-                  border: profile?.avatar_style === s.key ? '3px solid var(--gold)' : '3px solid transparent'
-                }}
-              />
-              <span style={{ fontSize: 10, color: 'var(--muted)' }}>{s.label}</span>
-            </button>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          {profile?.avatar_style && profile.avatar_style !== FULL_BODY_STYLE && (
-            <>
-              <button className="btn btn-outline" style={{ flex: 1 }} onClick={shuffleAvatar}>🎲 Sortear outro</button>
-              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={useRealPhoto}>Usar foto real</button>
-            </>
-          )}
-        </div>
       </div>
 
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
@@ -180,8 +111,7 @@ export default function Profile() {
         <div className="card" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 44, height: 44, borderRadius: '50%',
-            backgroundColor: 'var(--night-3)',
-            backgroundImage: displayAvatarUrl(partner) ? `url(${displayAvatarUrl(partner)})` : 'none',
+            background: partner.avatar_url ? `url(${partner.avatar_url})` : 'var(--night-3)',
             backgroundSize: 'cover', backgroundPosition: 'center'
           }} />
           <div>

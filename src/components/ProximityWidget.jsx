@@ -1,5 +1,4 @@
 import React from 'react';
-import { displayAvatarUrl, isFullBodyAvatar } from '../lib/dicebear';
 
 // Distância em linha reta entre 2 pontos [lat, lng], em km (fórmula de haversine).
 function haversineKm([lat1, lon1], [lat2, lon2]) {
@@ -16,25 +15,7 @@ function formatDistance(km) {
   return `${km.toFixed(1)} km`;
 }
 
-// Avatar de corpo inteiro: uma foto/PNG normal que a pessoa subiu (ex: um avatar
-// 3D exportado de algum criador tipo Avaturn), mostrada sem cortar em círculo.
-function FullBodyFigure({ person, lean }) {
-  return (
-    <img
-      src={person.avatar_url}
-      alt=""
-      style={{
-        height: 150, width: 'auto',
-        filter: 'drop-shadow(0 8px 14px rgba(0,0,0,0.35))',
-        transition: 'transform 0.6s ease',
-        transform: lean ? `rotate(${lean}deg)` : 'none'
-      }}
-    />
-  );
-}
-
-// Avatar redondo (foto real ou desenho DiceBear).
-function RoundFigure({ url, name, borderColor, lean }) {
+function Avatar({ url, name, borderColor, lean }) {
   const initial = (name || '?').trim().charAt(0).toUpperCase();
   return (
     <div
@@ -56,31 +37,21 @@ function RoundFigure({ url, name, borderColor, lean }) {
   );
 }
 
-function Figure({ person, borderColor, lean }) {
-  if (isFullBodyAvatar(person)) {
-    return <FullBodyFigure person={person} lean={lean} />;
-  }
-  return <RoundFigure url={displayAvatarUrl(person)} name={person?.name} borderColor={borderColor} lean={lean} />;
-}
-
-// Uma "cena" bem simples com os avatares dos dois: eles se aproximam conforme
+// Uma "cena" bem simples com as fotos dos dois: elas se aproximam conforme
 // a distância real diminui, e ficam coladas com um coração quando estão pertinho.
 export default function ProximityWidget({ me, partner, mePoint, partnerPoint }) {
   const distanceKm = mePoint && partnerPoint ? haversineKm(mePoint, partnerPoint) : null;
   const together = distanceKm != null && distanceKm < 0.05; // menos de 50m = "juntos"
-  const anyFullBody = isFullBodyAvatar(me) || isFullBodyAvatar(partner);
-  const baseGap = distanceKm == null ? 60 : Math.min(110, 24 + distanceKm * 26);
-  const togetherGap = anyFullBody ? -34 : -18;
-  const gap = together ? togetherGap : baseGap;
+  const gap = distanceKm == null ? 60 : together ? -18 : Math.min(110, 24 + distanceKm * 26);
 
   return (
     <div className="card" style={{ margin: '0 20px 16px', padding: '28px 16px', textAlign: 'center', overflow: 'hidden' }}>
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap, marginBottom: 16 }}>
-        <Figure person={me} borderColor="var(--gold)" lean={together ? 8 : 0} />
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap, marginBottom: 16 }}>
+        <Avatar url={me?.avatar_url} name={me?.name} borderColor="var(--gold)" lean={together ? 8 : 0} />
         {together && (
           <span style={{ position: 'absolute', top: -12, fontSize: 26, animation: 'heart-pop 1.4s ease-in-out infinite' }}>💛</span>
         )}
-        <Figure person={partner} borderColor="var(--lavender)" lean={together ? -8 : 0} />
+        <Avatar url={partner?.avatar_url} name={partner?.name} borderColor="var(--lavender)" lean={together ? -8 : 0} />
       </div>
 
       {distanceKm == null ? (
