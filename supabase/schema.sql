@@ -13,6 +13,8 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   name text,
   avatar_url text,
+  avatar_style text,
+  avatar_seed text,
   invite_code text unique,
   partner_id uuid references public.profiles(id) on delete set null,
   anniversary_date date,

@@ -1,4 +1,5 @@
 import React from 'react';
+import { displayAvatarUrl } from '../lib/dicebear';
 
 // Distância em linha reta entre 2 pontos [lat, lng], em km (fórmula de haversine).
 function haversineKm([lat1, lon1], [lat2, lon2]) {
@@ -15,19 +16,21 @@ function formatDistance(km) {
   return `${km.toFixed(1)} km`;
 }
 
-function Avatar({ url, name, borderColor }) {
+function Avatar({ url, name, borderColor, lean }) {
   const initial = (name || '?').trim().charAt(0).toUpperCase();
   return (
     <div
       style={{
         width: 84, height: 84, borderRadius: '50%',
         border: `3px solid ${borderColor}`,
-        background: url ? `url(${url})` : 'var(--night-3)',
+        backgroundColor: 'var(--night-3)',
+        backgroundImage: url ? `url(${url})` : 'none',
         backgroundSize: 'cover', backgroundPosition: 'center',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 26, fontWeight: 800, color: 'var(--cream)',
         flexShrink: 0, boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
-        transition: 'margin 0.6s ease'
+        transition: 'margin 0.6s ease, transform 0.6s ease',
+        transform: lean ? `rotate(${lean}deg)` : 'none'
       }}
     >
       {!url && initial}
@@ -45,11 +48,11 @@ export default function ProximityWidget({ me, partner, mePoint, partnerPoint }) 
   return (
     <div className="card" style={{ margin: '0 20px 16px', padding: '28px 16px', textAlign: 'center', overflow: 'hidden' }}>
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap, marginBottom: 16 }}>
-        <Avatar url={me?.avatar_url} name={me?.name} borderColor="var(--gold)" />
+        <Avatar url={displayAvatarUrl(me)} name={me?.name} borderColor="var(--gold)" lean={together ? 8 : 0} />
         {together && (
           <span style={{ position: 'absolute', top: -12, fontSize: 26, animation: 'heart-pop 1.4s ease-in-out infinite' }}>💛</span>
         )}
-        <Avatar url={partner?.avatar_url} name={partner?.name} borderColor="var(--lavender)" />
+        <Avatar url={displayAvatarUrl(partner)} name={partner?.name} borderColor="var(--lavender)" lean={together ? -8 : 0} />
       </div>
 
       {distanceKm == null ? (
