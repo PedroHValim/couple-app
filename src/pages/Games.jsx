@@ -5,7 +5,8 @@ import { GameIcon } from '../components/Icons';
 const GAMES = [
   { key: 'velha', title: 'Jogo da velha', description: 'O clássico X e O, em tempo real, um contra o outro.' },
   { key: 'ppt', title: 'Pedra, papel e tesoura', description: 'Escolham ao mesmo tempo e vejam quem leva a rodada.' },
-  { key: 'lig4', title: 'Lig-4', description: 'Alinhe 4 peças antes do seu par, num tabuleiro 7x6.' }
+  { key: 'lig4', title: 'Lig-4', description: 'Alinhe 4 peças antes do seu par, num tabuleiro 7x6.' },
+  { key: 'forca', title: 'Forca', description: 'Um escolhe a palavra secreta, o outro chuta as letras.' }
 ];
 
 export default function Games() {

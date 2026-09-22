@@ -13,6 +13,7 @@ import Games from './pages/Games';
 import TicTacToe from './pages/games/TicTacToe';
 import RockPaperScissors from './pages/games/RockPaperScissors';
 import ConnectFour from './pages/games/ConnectFour';
+import Hangman from './pages/games/Hangman';
 import Profile from './pages/Profile';
 
 function Gate({ children }) {
@@ -47,6 +48,7 @@ function Shell() {
         <Route path="/jogos/velha" element={<Gate><TicTacToe /></Gate>} />
         <Route path="/jogos/ppt" element={<Gate><RockPaperScissors /></Gate>} />
         <Route path="/jogos/lig4" element={<Gate><ConnectFour /></Gate>} />
+        <Route path="/jogos/forca" element={<Gate><Hangman /></Gate>} />
         <Route path="/perfil" element={<Gate><Profile /></Gate>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
